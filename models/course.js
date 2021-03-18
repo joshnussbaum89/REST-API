@@ -21,12 +21,13 @@ module.exports = (sequelize, DataTypes) => {
 
   Course.association = (models) => {
     // one-to-one
-    Course.hasOne(models.User, {
-      as: 'user',
+    Course.belongsTo(models.User, {
+      as: 'userOwner',
       foreignKey: {
         fieldName: 'userId',
         allowNull: false,
       }
+      // foreignKey: 'userId',
     });
   }
   return Course;

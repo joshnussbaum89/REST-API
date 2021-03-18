@@ -28,15 +28,18 @@ router.get('/', (req, res) => {
 
 // /api/users GET route that will return the currently authenticated user along with a 200 HTTP status code.
 router.get('/users', asyncHandler(async (req, res) => {
+    // THIS RETURNS ALL USERS. 
+    // SHOULD ONLY RETURN THE AUTHENTICATED USER.
 
+    const users = await User.findAll();
+    res.json(users);
 }));
 
 // /api/users POST route that will create a new user, set the Location header to "/", and return a 201 HTTP status code and no content.
 router.post('/users', asyncHandler(async (req, res) => {
     try {
         await User.create(req.body);
-        // res.setHeader('/');
-        res.status(201).json({ "message": "Account successfully created!" });
+        res.status(201).location('/').json({ "message": "Account successfully created!" });
     } catch (error) {
         console.log('ERROR: ', error.name);
 
@@ -52,10 +55,23 @@ router.post('/users', asyncHandler(async (req, res) => {
 // /api/courses GET route that will return a list of all courses including the User that owns each course and a 200 HTTP status code.
 router.get('/courses', asyncHandler(async (req, res) => {
     let courses = await Course.findAll();
-    res.json(courses);
+    if (courses) {
+        res.json(courses);
+    } else {
+        res.json({ "message": "No courses to display" });
+    }
 }));
 
 // /api/courses/:id GET route that will return the corresponding course along with the User that owns that course and a 200 HTTP status code.
+router.get('/courses/:id', asyncHandler(async (req, res) => {
+    const course = await Course.findByPk(req.params.id, {
+        include: [{
+            model: User,
+            as: 'userOwner',
+        }],
+    });
+    res.json(course);
+}));
 
 // /api/courses POST route that will create a new course, set the Location header to the URI for the newly created course, and return a 201 HTTP status code and no content.
 

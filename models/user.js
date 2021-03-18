@@ -54,11 +54,12 @@ module.exports = (sequelize) => {
   User.association = (models) => {
     // one-to-many
     User.hasMany(models.Course, {
-      as: 'user',
+      as: 'userOwner',
       foreignKey: {
         fieldName: 'userId',
         allowNull: false,
       }
+      // foreignKey: 'userId',
     });
   }
   return User;
