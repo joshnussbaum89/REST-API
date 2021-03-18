@@ -6,12 +6,39 @@ module.exports = (sequelize, DataTypes) => {
   class Course extends Model { };
 
   Course.init({
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true
+    // firstName: {
+    //   type: DataTypes.STRING,
+    //   allowNull: false,
+    //   validate: {
+    //     notNull: {
+    //       msg: 'First name is required'
+    //     }
+    //   }
+    // },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Title is required'
+        },
+        notEmpty: {
+          msg: 'Please provide a title'
+        }
+      }
     },
-    title: DataTypes.STRING,
-    description: DataTypes.TEXT,
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Description is required'
+        },
+        notEmpty: {
+          msg: 'Please provide a description'
+        }
+      }
+    },
     estimatedTime: DataTypes.STRING,
     materialsNeeded: DataTypes.STRING
   }, {
@@ -23,11 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     // one-to-one
     Course.belongsTo(models.User, {
       as: 'userOwner',
-      foreignKey: {
-        fieldName: 'userId',
-        allowNull: false,
-      }
-      // foreignKey: 'userId',
+      foreignKey: 'userId'
     });
   }
   return Course;
