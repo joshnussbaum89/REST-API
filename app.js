@@ -25,7 +25,8 @@ const { sequelize } = require('./models');
 
 // setup morgan which gives us http request logging
 app.use(morgan('dev'));
-
+// body parser
+app.use(express.json());
 // Routes from routes.js
 app.use('/api', routes);
 
