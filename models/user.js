@@ -51,7 +51,7 @@ module.exports = (sequelize) => {
     modelName: 'User',
   });
 
-  User.association = (models) => {
+  User.associate = (models) => {
     // one-to-many
     User.hasMany(models.Course, {
       as: 'userOwner',
