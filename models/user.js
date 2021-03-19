@@ -28,6 +28,9 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
+        isEmail: {
+          msg: 'Please enter a valid email address'
+        },
         notNull: {
           msg: 'Email address is required'
         }
