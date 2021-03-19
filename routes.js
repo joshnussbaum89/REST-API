@@ -1,10 +1,12 @@
 'use strict';
 
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const auth = require('basic-auth');
+const { User, Course } = require('./models');
 
 // Construct a router instance.
 const router = express.Router();
-const { User, Course } = require('./models');
 
 // Handler function to wrap each route.
 function asyncHandler(cb) {
@@ -18,6 +20,37 @@ function asyncHandler(cb) {
     }
 }
 
+const authenticateUser = async (req, res, next) => {
+    // Parse the user's credentials from the Authorization header.
+    let message;
+    const credentials = auth(req);
+    
+    if (credentials) {
+        const user = await User.findOne({ where: { emailAddress: credentials.name } });
+        // Store the user on the Request object.
+        req.currentUser = user;
+    }
+    //     // if (user) {
+    //     //     const authenticated = bcrypt
+    //     //         .compareSync(credentials.pass, user.confirmedPassword);
+    //     //     if (authenticated) {
+    //     //         console.log(`Authentication successful for username: ${user.username}`);
+
+    //     //         // Store the user on the Request object.
+    //     //         req.currentUser = user;
+    //     //     } else {
+    //     //         message = `Authentication failure for username: ${user.username}`;
+    //     //     }
+    //     // } else {
+    //     //     message = `User not found for username: ${credentials.name}`;
+    //     // }
+    // } else {
+    //     message = 'Auth header not found';
+    // }
+    console.log(credentials);
+    next();
+}
+
 // setup a friendly greeting for the root route
 router.get('/', (req, res) => {
     res.json({
@@ -25,19 +58,26 @@ router.get('/', (req, res) => {
     });
 });
 
-
+/**
+ * TODO
+ * THIS RETURNS ALL USERS
+ * SHOULD ONLY RETURN THE AUTHENTICATED USER
+ */
 // /api/users GET route that will return the currently authenticated user along with a 200 HTTP status code.
-router.get('/users', asyncHandler(async (req, res) => {
-    // THIS RETURNS ALL USERS. 
-    // SHOULD ONLY RETURN THE AUTHENTICATED USER.
-
-    const users = await User.findAll();
-    res.json(users);
+router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
+    const user = req.currentUser;
+    res.json({ user });
 }));
 
 // /api/users POST route that will create a new user, set the Location header to "/", and return a 201 HTTP status code and no content.
 router.post('/users', asyncHandler(async (req, res) => {
     try {
+        // Use bcryptjs to has password
+        const user = req.body;
+        let { password } = user;
+        user.password = bcrypt.hashSync(password, 10);
+
+        // create user
         await User.create(req.body);
         res.status(201).location('/').json({ "message": "Account successfully created!" });
     } catch (error) {
@@ -92,9 +132,20 @@ router.post('/courses', asyncHandler(async (req, res) => {
 
 // /api/courses/:id PUT route that will update the corresponding course and return a 204 HTTP status code and no content.
 router.put('/courses/:id', asyncHandler(async (req, res) => {
-    const course = await Course.findByPk(req.params.id);
-    await course.update(req.body);
-    res.status(204).end();
+    try {
+        const course = await Course.findByPk(req.params.id);
+        await course.update(req.body);
+        res.status(204).end();
+    } catch (error) {
+        console.log('ERROR: ', error.name);
+
+        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors });
+        } else {
+            throw error;
+        }
+    }
 }));
 
 // /api/courses/:id DELETE route that will delete the corresponding course and return a 204 HTTP status code and no content.
