@@ -1,6 +1,6 @@
 # Treehouse Unit-09 REST API Project
 
-This is a REST API, built with Express and SQL.
+REST API that provides a way to administer a school database containing information about users and courses. This API is built with Express and SQL.
 
 ## Installation
 
