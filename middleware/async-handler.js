@@ -1,4 +1,6 @@
-// Handler function to wrap each route.
+/**
+ * Asynchronous handler function to wrap each route
+ */
 exports.asyncHandler = (cb) => {
     return async (req, res, next) => {
         try {
@@ -8,4 +10,4 @@ exports.asyncHandler = (cb) => {
             next(error);
         }
     }
-}
+};

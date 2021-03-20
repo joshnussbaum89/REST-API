@@ -2,6 +2,10 @@
 
 const { Model, DataTypes } = require('sequelize');
 
+/**
+ * User Model
+ * Attributes: firstName, lastName, emailAddress, password
+ */
 module.exports = (sequelize) => {
   class User extends Model { };
 
@@ -27,6 +31,7 @@ module.exports = (sequelize) => {
     emailAddress: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
       validate: {
         isEmail: {
           msg: 'Please enter a valid email address'
