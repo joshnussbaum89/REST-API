@@ -44,18 +44,22 @@ router.post('/users', asyncHandler(async (req, res) => {
 
         // create user
         await User.create(req.body);
-        res.status(201).location('/').json({ "message": "Account successfully created!" });
+        res.status(201).location('/').end();
     } catch (error) {
         console.log('ERROR: ', error.name);
 
         // Check for Sequelize errors
         if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-            const errors = error.errors.map(err => err.message);
+            let errors = error.errors.map(err => err.message);
             res.status(400).json({ errors });
+        } else if (error.name === 'Error') {
+            res.status(400).json({ "errors": ["Please enter account information"] });
         } else {
             throw error;
         };
     };
+
+
 }));
 
 /**
@@ -66,6 +70,13 @@ router.get('/courses', asyncHandler(async (req, res) => {
         attributes: {
             exclude: ['createdAt', 'updatedAt'],
         },
+        include: [{
+            model: User,
+            as: 'userOwner',
+            attributes: {
+                exclude: ['password', 'createdAt', 'updatedAt']
+            },
+        }],
     });
 
     if (courses) {
@@ -80,6 +91,9 @@ router.get('/courses', asyncHandler(async (req, res) => {
  */
 router.get('/courses/:id', asyncHandler(async (req, res) => {
     const course = await Course.findByPk(req.params.id, {
+        attributes: {
+            exclude: ['createdAt', 'updatedAt'],
+        },
         include: [{
             model: User,
             as: 'userOwner',
@@ -87,9 +101,6 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
                 exclude: ['password', 'createdAt', 'updatedAt']
             },
         }],
-        attributes: {
-            exclude: ['createdAt', 'updatedAt'],
-        },
     });
 
     res.json(course);
@@ -103,7 +114,7 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
     try {
         await Course.create(req.body);
-        res.status(201).location(`courses/${req.body.userId}`).json({ "message": "Course successfully created!" });
+        res.status(201).location(`courses/${req.body.title}`).end();
     } catch (error) {
         console.log('ERROR: ', error.name);
 
