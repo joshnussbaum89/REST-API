@@ -37,10 +37,13 @@ router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
  */
 router.post('/users', asyncHandler(async (req, res) => {
     try {
-        // Use bcryptjs to hash password
         const user = req.body;
-        let { password } = user;
-        user.password = bcrypt.hashSync(password, 10);
+
+        // Use bcryptjs to hash password
+        if (user.length > 0) {
+            let { password } = user;
+            user.password = bcrypt.hashSync(password, 10);
+        }
 
         // create user
         await User.create(req.body);
@@ -52,8 +55,6 @@ router.post('/users', asyncHandler(async (req, res) => {
         if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
             let errors = error.errors.map(err => err.message);
             res.status(400).json({ errors });
-        } else if (error.name === 'Error') {
-            res.status(400).json({ "errors": ["Please enter account information"] });
         } else {
             throw error;
         };
@@ -113,8 +114,10 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
  */
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
     try {
-        await Course.create(req.body);
-        res.status(201).location(`courses/${req.body.title}`).end();
+        const course = await Course.create(req.body);
+        const courseIndex = course.dataValues.id;
+
+        res.status(201).location(`courses/${courseIndex}`).end();
     } catch (error) {
         console.log('ERROR: ', error.name);
 
@@ -138,7 +141,7 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
         // Make sure only authenticated user can update a course
         if (req.currentUser === course.userId) {
             await course.update(req.body);
-            res.json({ "message": "Course successfully edited" }).status(204).end();
+            res.status(204).end();
         } else {
             const error = new Error();
             error.message = "Sorry, you don't have authority to update this course.";
@@ -167,7 +170,7 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) =>
     // Make sure only authenticated user can delete a course
     if (req.currentUser === course.userId) {
         await course.destroy(req.body);
-        res.json({ "message": "Course successfully deleted" }).status(204).end();
+        res.status(204).end();
     } else {
         const error = new Error();
         error.message = "Sorry, you don't have authority to delete this course.";
